@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='47.2' r='34'%0Afill='transparent' stroke='%23fff' stroke-width='7.5' /%3E%3C/svg%3E"
+      type="image/svg+xml"
+    />
+    <title>todo-app</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        --light: #eee;
+        --dark: #222;
+        --color: var(--dark);
+        --background: var(--light);
+        color: var(--color);
+        background: var(--background)
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body:not(.light) {
+          --color: var(--light);
+          --background: var(--dark);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main></main>
+    <script type="module">const kebab = (s)=>s.replace(/[a-z](?=[A-Z])|[A-Z]+(?=[A-Z][a-z])/g, '<!-- bundle -->-').toLowerCase()
+;
+const toCssText = (style)=>{
+    let css = '';
+    for(const key in style)css += kebab(key) + ':' + style[key] + ';';
+    return css;
+};
+const createProp = (el, _type, name, value, attrs)=>{
+    switch(name){
+        case 'children':
+        case 'ref':
+            return;
+        case 'style':
+            value = value?.valueOf();
+            if (typeof value === 'object') value = toCssText(value);
+            el.setAttribute('style', value);
+            attrs.style = el.getAttributeNode('style');
+            return;
+    }
+    const attr = name
+    ;
+    value = value?.valueOf();
+    switch(typeof value){
+        case 'string':
+        case 'number':
+            if (!(name in el)) {
+                el.setAttribute(attr, value);
+                attrs[attr] = el.getAttributeNode(attr);
+                return;
+            }
+            break;
+        case 'function':
+            el.setAttribute(attr, '');
+            attrs[attr] = el.getAttributeNode(attr)
+            ;
+            el[name] = value;
+            return;
+    }
+    el[name] = value;
+    if (el.hasAttribute(attr)) attrs[attr] = el.getAttributeNode(attr);
+};
+const propCache = new WeakMap();
+const createProps = (el, type, props = {}, attrs = {}, cacheRef = el)=>{
+    for(const name in props)createProp(el, type, name, props[name], attrs);
+    propCache.set(cacheRef, {
+        props,
+        attrs
+    });
+};
+const updateProps = (el, type, next = {}, cacheRef = el)=>{
+    if (!propCache.has(cacheRef)) return next && createProps(el, type, next, void 0, cacheRef);
+    const c = propCache.get(cacheRef);
+    const { attrs , props  } = c;
+    if (!next) {
+        for(const name in attrs)el.removeAttributeNode(attrs[name]);
+        for(const name3 in props)delete el[name3];
+        propCache.delete(cacheRef);
+        return;
+    }
+    let value;
+    out: for(const name in props){
+        if (!(name in next)) {
+            delete el[name];
+            continue;
+        }
+        value = next[name];
+        switch(name){
+            case 'children':
+            case 'ref':
+                continue out;
+            case 'value':
+                value = value?.valueOf();
+                el[name] !== value && document.activeElement !== el && (el[name] = value);
+                continue out;
+        }
+        value = value?.valueOf()
+        ;
+        el[name] = value;
+    }
+    for(const name1 in attrs){
+        if (!(name1 in next) || next[name1] === false || next[name1] == null) {
+            el.removeAttributeNode(attrs[name1]);
+            delete attrs[name1];
+            continue;
+        }
+        value = next[name1]?.valueOf();
+        switch(name1){
+            case 'style':
+                if (typeof value === 'object') value = toCssText(value);
+                break;
+        }
+        if (props[name1] !== value && typeof value !== 'function') attrs[name1].value = value;
+    }
+    for(const name2 in next){
+        if (!(name2 in attrs) && !(name2 in props)) createProp(el, type, name2, next[name2], attrs);
+    }
+    c.props = next;
+};
+
+const anchor = new Comment();
+const Fragment = Symbol();
+const jsx$1 = (kind, props, key)=>kind === Fragment ? props.children : {
+        kind,
+        props,
+        key
+    }
+;
+const jsxs = jsx$1;
+let hook;
+const createHook = ()=>function current(fn = current.fn) {
+        const prev = hook;
+        hook = current;
+        hook.fn = fn;
+        fn();
+        hook = prev;
+    }
+;
+let Chunk = class Chunk extends Array {
+    firstChild;
+    dom = [];
+    get last() {
+        return this.dom.at(-1);
+    }
+    get nextSibling() {
+        return this.last?.nextSibling;
+    }
+    insertBefore(x) {
+        this.unshift(x);
+    }
+    appendChild(x) {
+        this.push(x);
+    }
+    after(x) {
+        this.last?.after(x);
+    }
+    save() {
+        this.dom = [
+            ...this
+        ];
+    }
+    remove() {
+        this.dom.forEach((el)=>el.remove()
+        );
+        this.splice(0);
+    }
+    removeChild(x) {
+        let i = this.indexOf(x);
+        ~i && this.splice(i, 1);
+        i = this.dom.indexOf(x);
+        ~i && this.dom.splice(i, 1);
+    }
+};
+const { TEXT_NODE , COMMENT_NODE  } = document;
+const html = document.createElement.bind(document);
+const svg = document.createElementNS.bind(document, 'http://www.w3.org/2000/svg');
+const forceArray = (x, withNull)=>Array.isArray(x) ? x : x == null && !withNull ? [] : [
+        x
+    ]
+;
+const flatDom = (arr, res = [])=>{
+    for (const el of arr){
+        if (el.dom) res.push(...flatDom(el.dom));
+        else res.push(el);
+    }
+    return res;
+};
+const prevs = new WeakMap();
+const render = (n, el, doc = html, withNull = false)=>reconcile(el, forceArray(n, withNull), prevs.get(el), doc)
+;
+const reconcile = (parent, nk, pk, doc)=>{
+    if (pk?.running) {
+        console.warn('attempt to reconcile lane which is reconciling');
+        return;
+    }
+    if (pk === nk) nk = [
+        ...nk
+    ];
+    prevs.set(parent, nk);
+    nk.running = true;
+    nk.dom = Array(nk.length);
+    nk.keyed = new Map();
+    nk.mapped = new Map();
+    if (Array.isArray(pk)) {
+        const keep = new Set();
+        for(let i = 0, n, el, p, pel, k, pi; i < nk.length; i++){
+            n = nk[pi = i];
+            k = n?.key;
+            if (k != null) {
+                nk.keyed.set(k, i);
+                pi = pk.keyed.get(k) ?? -1;
+            }
+            p = pk[pi];
+            pel = pk.dom[pi];
+            nk.dom[i] = el = create$1(doc, n, p, pel);
+            if (el === pel) keep.add(pel);
+        }
+        for (const pel1 of pk.dom){
+            if (!keep.has(pel1)) {
+                if (parent instanceof Chunk) parent.removeChild(pel1);
+                pel1.remove();
+                pk.mapped.get(pel1)?.hook?.onremove?.();
+            }
+        }
+    } else {
+        for(let i = 0, n, el, k; i < nk.length; i++){
+            n = nk[i];
+            k = n?.key;
+            if (k != null) nk.keyed.set(k, i);
+            nk.dom[i] = el = create$1(doc, n);
+            nk.mapped.set(el, n);
+        }
+    }
+    nk.flatDom = flatDom(nk.dom);
+    if (pk?.flatDom) diff(parent, nk.flatDom, pk.flatDom);
+    else nk.flatDom.forEach((el)=>parent.appendChild(el)
+    );
+    nk.running = false;
+};
+const diff = (parent, n, p, i = 0, len = n.length, el, last)=>{
+    for(; i < len; i++){
+        el = n[i];
+        if (p[i] === el) last = el;
+        else if (!i) parent.insertBefore(last = el, parent.firstChild);
+        else last.after(last = el);
+    }
+};
+const create$1 = (doc, n, p, pel)=>{
+    let el;
+    switch(typeof n){
+        case 'string':
+        case 'number':
+            if (pel?.nodeType === TEXT_NODE) {
+                if (p != n) pel.nodeValue = n;
+                return pel;
+            }
+            el = new Text(n);
+            return el;
+        case 'object':
+            if (!n) break;
+            if (Array.isArray(n)) {
+                if (pel && Array.isArray(p)) el = pel;
+                else el = new Chunk();
+                reconcile(el, n, p, doc);
+                el.save();
+            } else if (typeof n.kind === 'string') {
+                if (n.props.ref?.current && n.props.ref.current.tagName.toLowerCase() === n.kind && (el = n.props.ref.current) ||
+                pel && p.kind === n.kind && (el = pel)) {
+                    updateProps(el, n.kind, n.props);
+                } else {
+                    if (n.kind === 'svg') doc = svg;
+                    el = doc(n.kind, 'is' in n.props ? {
+                        is: n.props.is
+                    } : void 0);
+                    if (n.kind === 'foreignObject') doc = html;
+                    createProps(el, n.kind, n.props);
+                }
+                render(n.props.children, el, doc);
+                if ('ref' in n.props && el !== n.props.ref.current) queueMicrotask(()=>n.props.ref.current = el
+                );
+            } else {
+                let initial = true;
+                if (!((el = pel) && (n.hook = p.hook))) {
+                    el = new Chunk();
+                    n.hook = createHook();
+                }
+                n.hook(()=>{
+                    let next;
+                    if (!initial && !(next = el.nextSibling)) el.after(next = anchor);
+                    render(n.kind(n.props), el, doc, true);
+                    el.save();
+                    if (!initial && next) {
+                        for (const e of flatDom(el))next.before(e);
+                        next === anchor && next.remove();
+                    } else {
+                        initial = false;
+                    }
+                });
+            }
+            return el;
+    }
+    if (pel?.nodeType === COMMENT_NODE) return pel;
+    el = new Comment();
+    return el;
+};
+
+const FluentFlags = (cb, flags = {})=>new Proxy(cb, {
+        get (_, prop, receiver) {
+            flags[prop] = true;
+            return receiver;
+        },
+        apply (_, self, args) {
+            const f = {
+                ...flags
+            };
+            flags = {}
+            ;
+            return cb.call(self, f).apply(self, args);
+        }
+    })
+;
+
+const event = ()=>FluentFlags((flags)=>(fn = ()=>{})=>function(event1) {
+                if (flags.prevent) event1.preventDefault();
+                if (flags.stop) flags.immediate ? event1.stopImmediatePropagation() : event1.stopPropagation();
+                return fn.call(this, event1);
+            }
+    )
+;
+
+function onEvent(el, type, listener, options) {
+    el.addEventListener(type, listener, options);
+    return ()=>off(el, type, listener, options)
+    ;
+}
+ const on = ()=>FluentFlags((flags)=>(el, type, fn, options = {})=>onEvent(el, type, fn, {
+                ...flags.active ? {
+                    passive: false
+                } : null,
+                ...flags,
+                ...options
+            })
+    )
+;
+ const off = (el, type, listener, options)=>el.removeEventListener(type, listener, options)
+;
+
+const NonNull = (e) => e[1] != null;
+
+class Token extends String {
+    static create(value, group, source) {
+        return new Token(value, group, source);
+    }
+    group;
+    get value() {
+        return '' + this;
+    }
+    get index() {
+        return this.source.index;
+    }
+    source;
+    constructor(value, group, source) {
+        super(value);
+        this.group = group;
+        Object.defineProperty(this, 'source', { enumerable: false, value: source });
+    }
+    is(group, value) {
+        return group == this.group && (value == null || value == this.value);
+    }
+    as(value, group = this.group) {
+        return Token.create(value, group, this.source);
+    }
+}
+
+const matchToToken = (match) => {
+    if (!match)
+        return null;
+    if (match.index == null)
+        return null;
+    if (!match.groups)
+        throw new TypeError('RegExp match is missing named groups such as: /(?<group>[a-z])/');
+    const entry = Object.entries(match.groups).find(NonNull);
+    if (entry)
+        return Token.create(entry[1], entry[0], match);
+    return null;
+};
+
+const joinRegExps = (regexps) => new RegExp(regexps
+    .map(x => x.toString())
+    .map(x => x.slice(x.indexOf('/') + 1, x.lastIndexOf('/')))
+    .join('|'), 'gi');
+
+const createTokenizer = (...regexps) => {
+    const regexp = joinRegExps(regexps);
+    return ((input) => {
+        const matches = input.matchAll(regexp);
+        const next = () => matchToToken(matches.next().value);
+        const iterator = function* (token) {
+            while ((token = next()))
+                yield token;
+        };
+        Object.defineProperty(next, Symbol.iterator, {
+            value: iterator,
+        });
+        return next;
+    });
+};
+
+const extraWhitespace = /\s+/g;
+const tokenizer = createTokenizer(/(?<open>\s*\{\s*)/, /(?<close>\s*\}\s*)/, /(?<comment>\/\*[^]*?\*\/)/, /\s*(?<rule>[^{;}/'"]+)\s+?(?={)/, /\s*(?<string>'.*?'|".*?")(?=;)/, /\s*(?<prop>[^:;/]+)(?=:)/, /\s*(?<value>[^:;]+)(?=;)/);
+ function cssToJs(input) {
+    input = input.replace(extraWhitespace, ' ');
+    const nextToken = tokenizer(input);
+    const filter = (ignored)=>()=>{
+            let token;
+            while(token = nextToken())if (!ignored.includes(token.group)) break;
+            return token;
+        }
+    ;
+    const next = filter([
+        'comment'
+    ]);
+    const parse = (style = {})=>{
+        let token;
+        while(token = next()){
+            const { value , group  } = token;
+            switch(group){
+                case 'rule':
+                    next()
+                    ;
+                    parse(style[value.trim()] ??= {});
+                    break;
+                case 'prop':
+                    style[value.trim()] = next()?.value?.trim();
+                    break;
+                case 'close':
+                    return style;
+            }
+        }
+        return style;
+    };
+    return parse();
+}
+
+function joinPartsWithValues(parts, values) {
+    let str = '';
+    for(let i = 0; i < parts.length; i++){
+        str += parts[i];
+        str += values[i];
+    }
+    return str;
+}
+ function kebabCase(s) {
+    return s.replace(/[A-Z]/g, (m, i)=>(i ? '-' : '') + m
+    ).toLowerCase();
+}
+
+const mediaRule = (rule, media)=>media ? `${media}{${rule}}` : rule
+;
+const createRule = (target, prop, value)=>`${target}{${kebabCase(prop)}:${value}}`
+;
+const remap = (target, map)=>
+    [
+        ...target.matchAll(/[\w-]+|./g)
+    ].flat().map((x)=>map?.get(x) ?? x
+    ).join('')
+;
+ function jsToCss(rules1, rootSelector, aliasMap) {
+    rootSelector ??= '';
+    let css = '';
+    const parse = (rules, child = '', media = '')=>{
+        for(const key in rules){
+            const value = rules[key];
+            if (typeof value === 'object') {
+                const isMedia = /^@/.test(key) ? key : null;
+                let target = child;
+                if (!isMedia) {
+                    target = key.split(',').map((k)=>k.trim()
+                    ).map((k)=>child.split(',').map((x)=>(x + (/^&/.test(k) ? k.slice(1) : ' ' + k)).trim()
+                        ).join(',')
+                    ).map((k)=>k.trim()
+                    ).join(',');
+                }
+                parse(value, target, isMedia || media);
+            } else {
+                const rule = mediaRule(createRule(child ? remap(child, aliasMap) : rootSelector, key, value), media);
+                css += '\n' + rule.trim();
+            }
+        }
+    };
+    parse({
+        [rootSelector]: rules1
+    });
+    return css.trim();
+}
+
+function css(parts, ...values) {
+    const nestedCssString = joinPartsWithValues(parts, values);
+    const nestedCssObject = cssToJs(nestedCssString);
+    function compileCss(rootSelector = ':host', aliasMap) {
+        return jsToCss(nestedCssObject, rootSelector, aliasMap);
+    }
+    compileCss.valueOf = compileCss;
+    return compileCss;
+}
+
+const accessors = (target, source, fn) => Object.defineProperties(target, Object.fromEntries(Object.entries(source)
+    .map(([key, value]) => {
+    const next = fn(key, value);
+    const prev = Object.getOwnPropertyDescriptor(target, key);
+    if (prev && prev.get && prev.set) {
+        const { get, set } = next;
+        next.get = () => (prev.get?.() ?? get());
+        next.set = (v) => {
+            prev.set?.(v);
+            set(prev.get?.() ?? v);
+        };
+    }
+    return [key, {
+            configurable: true,
+            enumerable: true,
+            ...next,
+        }];
+})));
+
+const Types = new Map([
+    [String, x => x.toString()],
+    [Number, x => parseFloat(x)],
+    [Boolean, x => (x = x === false ? false : x != null)],
+]);
+const applyProps = (self, data) => {
+    for (const [key, value] of Object.entries(data))
+        if ([String, Number, Boolean].includes(value))
+            data[key] = void 0;
+    accessors(self, data, (key) => {
+        const attr = key.toLowerCase();
+        return {
+            get: () => data[key],
+            set(value) {
+                self.setAttribute(attr, value);
+            },
+        };
+    });
+    return data;
+};
+const attrs = (attrs) => (superclass) => {
+    const types = new Map();
+    const map = new Map();
+    for (const [key, value] of Object.entries(new attrs())) {
+        const type = value == null
+            ? Types.get(String)
+            : Types.get(value) ?? Types.get(value?.constructor);
+        if (!type) {
+            throw new TypeError(`Attribute "${key}" is not valid type, must be either: String, Number, Boolean, null, undefined`);
+        }
+        types.set(key, type);
+        map.set(key.toLowerCase(), key);
+    }
+    const observedAttributes = [...map.keys()];
+    return class extends superclass {
+        static get observedAttributes() {
+            return observedAttributes.concat(super.observedAttributes ?? []);
+        }
+        #data;
+        constructor(...args) {
+            super(...args);
+            this.#data = applyProps(this, new attrs());
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+            let key;
+            if (key = map.get(name)) {
+                const prev = this.#data[key];
+                const next = types.get(key)(newValue);
+                if (!Object.is(prev, next)) {
+                    this.#data[key] = next;
+                    this.propertyChangedCallback?.(key, prev, next);
+                }
+            }
+            super.attributeChangedCallback?.(name, oldValue, newValue);
+        }
+    };
+};
+
+const Listener = (body) => new Function('event', `with(this){let fn=${body};return typeof fn=='function'?fn.call(this,event):fn}`);
+const events = () => (superclass) => (superclass.prototype.dispatch // only apply the mixin once
+    ? superclass
+    : class extends superclass {
+        // based on: https://stackoverflow.com/a/49773201/175416
+        dispatchEvent(event) {
+            const onEvent = `on${event.type}`;
+            let fn = this[onEvent];
+            if (!fn)
+                fn = Listener(this.getAttribute(onEvent));
+            const pass = fn.call(this, event);
+            if (pass !== false)
+                super.dispatchEvent(event);
+            return pass;
+        }
+        dispatch(name, detail, init) {
+            return this.dispatchEvent(new CustomEvent(name, { detail, ...init }));
+        }
+    });
+
+const lifecycle = () => (superclass) => class extends mixter(superclass, events()) {
+    isMounted = false;
+    connectedCallback() {
+        super.connectedCallback?.();
+        if (!this.isMounted) {
+            this.isMounted = true;
+            this.dispatch('mounted');
+        }
+    }
+    disconnectedCallback() {
+        super.disconnectedCallback?.();
+        queueMicrotask(() => {
+            if (!this.isConnected) {
+                this.isMounted = false;
+                this.dispatch('unmounted');
+            }
+        });
+    }
+};
+
+const props = (props) => (superclass) => class extends superclass {
+    constructor(...args) {
+        super(...args);
+        Object.assign(this, new props());
+    }
+};
+
+const shadow = (init = '', html = '') => (superclass) => class extends superclass {
+    root = (() => {
+        const root = this.attachShadow(typeof init === 'object' ? init : { mode: 'open' });
+        root.innerHTML = typeof init === 'string' ? init : html;
+        return root;
+    })();
+};
+
+const argsOf = (x1)=>{
+    const d = x1.indexOf('{') + 1;
+    if (!d || x1.slice(0, d).includes(')')) return [];
+    x1 = x1.slice(d);
+    let match;
+    do {
+        match = false;
+        x1 = x1.replace(/`((\\`)?[^`])+?`|'((\\')?[^'])+?'|"((\\")?[^"])+?"|\([^{[(]*?\)|\{[^{[(]*?\}|\[[^{[(]*?\]/g, ()=>{
+            match = true;
+            return '';
+        });
+    }while (match)
+    return x1.split('}')[0].split(',').map((x)=>x.split(/[^\w\s$]+/g)[0].trim()
+    );
+};
+ const argtor = (fn, keys = new Set())=>(argsOf('' + fn).forEach((x)=>!x || keys.add(x)
+    ), keys)
+;
+
+const create = (target) => {
+    const NO_DEPS = Symbol();
+    const REDUCER = Symbol();
+    const entries = Object.entries(target);
+    const mem = Object.fromEntries(entries);
+    const register = (f) => {
+        f.keys = argtor(f.fn);
+        f.keys.forEach(key => effects.get(key).push(f));
+        !f.keys.size && effects.get(NO_DEPS).push(f);
+        f.values = {};
+        return run(f);
+    };
+    const update = (f) => {
+        f.pass = !f.keys.size;
+        for (const key of f.keys) {
+            const value = target[key];
+            if (value == null) {
+                f.pass = false;
+                return;
+            }
+            if (!(Object.is(f.values[key], value))) {
+                f.values[key] = value;
+                f.pass = true;
+            }
+        }
+    };
+    const run = (f) => {
+        update(f);
+        f.dispose?.();
+        if (!f.pass)
+            return;
+        const result = f.fn(f.values);
+        if (f.cb?.(result) === false)
+            return;
+        if (f.target != null)
+            target[f.target] = result;
+        else {
+            if (typeof result === 'function') {
+                f.dispose = () => {
+                    result();
+                    f.dispose = null;
+                };
+            }
+        }
+    };
+    const context = { $: {} };
+    const $ = context.$;
+    $.$ = $;
+    accessors(context.$, target, (key) => ({
+        get: () => mem[key],
+        set(v) {
+            if (v === REDUCER) {
+                v = reducer.initial;
+                reducer.target = key;
+                register(reducer);
+                if (v == null)
+                    return;
+            }
+            target[key] = v;
+        },
+    }));
+    accessors(target, target, (key) => ({
+        get: () => mem[key],
+        set(v) {
+            if (!(Object.is(mem[key], v))) {
+                mem[key] = v;
+                effects.get(key).forEach(run);
+            }
+        },
+    }));
+    let reducer;
+    $.reduce = (fn, initial) => {
+        reducer = { fn, initial };
+        return REDUCER;
+    };
+    $.effect = (fn, cb) => register({ fn, cb });
+    let effects;
+    $.cleanup = () => {
+        if (effects) {
+            for (const fns of effects.values())
+                fns.forEach((f) => f.dispose?.());
+        }
+        effects = new Map([
+            [NO_DEPS, []],
+            ...entries.map(([key]) => [key, []]),
+        ]);
+    };
+    $.cleanup();
+    return $;
+};
+const state = (fn) => (superclass) => class extends mixter(superclass, lifecycle()) {
+    host = this;
+    constructor(...args) {
+        super(...args);
+        const context = create(this);
+        on()(this, 'mounted', () => fn.call(this, context));
+        on()(this, 'unmounted', context.cleanup);
+    }
+};
+
+function mixter(a, ...mixins) {
+    return mixins.reduce((c, mixin) => mixin(c), a);
+}
+
+const proxy = (target) => new Proxy(target, {
+    get: (_, key) => ({
+        get current() {
+            return target[key];
+        },
+        set current(el) {
+            target[key] = el;
+        },
+    }),
+});
+const refs = ($) => ({
+    ref: Ref($),
+});
+const Ref = state => proxy(state);
+
+const renderer = (render) => ($) => ({
+    render(fn) {
+        $.effect(fn, (result) => {
+            render(result, $.root);
+            return false;
+        });
+    },
+});
+
+const jsx = ($) => ({
+    ...renderer(render)($),
+    part(fn, output) {
+        let update;
+        const Fn = () => {
+            update = hook;
+            return output;
+        };
+        $.effect(fn, value => {
+            output = value;
+            update?.();
+            return false;
+        });
+        return Fn;
+    },
+});
+
+class TodoApp extends mixter(
+// Extend basic HTMLElement
+HTMLElement, 
+// Attach ShadowRoot
+shadow(), 
+// Declare the events we will be emitting, this allows for
+// `el.onsomeevent = fn` to be statically typed
+events(), 
+// Element attributes, can be String, Number, Boolean
+attrs(class {
+    name = 'My todos!';
+    background = '#446';
+    todoColor = '#fff';
+    doneColor = '#999';
+}), 
+// Declare properties, can be any type
+props(class {
+    form;
+    textInput;
+    todos = [{ name: 'create todo list', done: false }];
+    onTodoCleanup;
+    onTodoAdd;
+    onTodoChange;
+}), 
+// Reactive state handler
+state(({ $, effect, reduce }) => {
+    // Use jsx, returns the render function which acts like a `reduce`
+    // that instead renders on the root element.
+    const { render } = jsx($);
+    // Use refs, `ref.someElement` can now be passed to `ref=` attributes in JSX.
+    // Refs are bidirectional, meaning if they already have a reference, passing them to
+    // a JSX element will "give" that element by reference, instead of filling "from" it.
+    const { ref } = refs($);
+    $.onTodoAdd = reduce(({ textInput, todos }) => (event().prevent.stop(() => {
+        $.todos = [...todos, { name: textInput.value, done: false }];
+        textInput.value = '';
+        textInput.focus();
+        // initialized with a noop function otherwise the render() below will never "fire"
+        // because we are in its dependencies and our dependency `textInput` is
+        // assigned inside it.
+    })), () => { });
+    $.onTodoChange = reduce(({ host, todos }) => (todo => (e => {
+        todo.done = e.currentTarget.checked;
+        $.todos = [...todos];
+        if (todo.done)
+            host.dispatch('done', { todo });
+    })));
+    $.onTodoCleanup = reduce(({ todos }) => (() => {
+        $.todos = [...todos.filter(todo => !todo.done)];
+    }), () => { });
+    effect(({ todos }) => {
+        if (todos.length > 0 && todos.filter(todo => !todo.done).length === 0)
+            alert('All done! Congrats!');
+    });
+    render(({ name, background, doneColor, onTodoAdd, onTodoChange, onTodoCleanup, todoColor, todos }) => (jsxs(Fragment, { children: [jsx$1("style", { children: css `
+          width: 250px;
+          padding: 10px;
+          display: inline-flex;
+          flex-flow: column nowrap;
+          align-items: center;
+          font-family: monospace;
+          background: ${background};
+          color: ${todoColor};
+          .done {
+            color: ${doneColor};
+          }
+          `() }), jsx$1("h1", { children: name }), jsxs("form", { onsubmit: onTodoAdd, style: {
+                    display: 'flex',
+                    flexFlow: 'column nowrap',
+                    alignItems: 'center',
+                }, children: [jsxs("div", { children: [jsx$1("input", { ref: ref.textInput, type: "text", autofocus: true }), jsx$1("button", { type: "submit", children: "Add" })] }), jsx$1("ol", { children: todos.map(todo => (jsx$1("li", { class: todo.done ? 'done' : '', children: jsxs("label", { children: [jsx$1("input", { type: "checkbox", checked: todo.done, onchange: onTodoChange(todo) }), todo.done
+                                        ? jsx$1("strike", { children: todo.name })
+                                        : todo.name] }) }))) }), todos.some(todo => todo.done)
+                        && jsx$1("button", { onclick: onTodoCleanup, children: "Cleanup" })] })] })));
+})) {
+}
+customElements.define('todo-app', TodoApp);
+const todoApp = new TodoApp();
+document.body.appendChild(todoApp);
+todoApp.ondone = ({ detail: { todo } }) => {
+    console.log('done', todo);
+    // change background to a random hue every time we finish a todo
+    todoApp.background = `hsl(${Math.random() * 360}, 30%, 20%)`;
+};
+
+export { TodoApp };
+</script>
+  </body>
+</html>

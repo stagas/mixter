@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`withProps fires propertyChangedCallback 1`] = `
+Array [
+  Object {
+    "name": "fooFoo",
+    "newValue": "some value",
+    "oldValue": undefined,
+  },
+  Object {
+    "name": "fooFoo",
+    "newValue": "another",
+    "oldValue": "some value",
+  },
+  Object {
+    "name": "barBar",
+    "newValue": "some other value",
+    "oldValue": undefined,
+  },
+]
+`;
