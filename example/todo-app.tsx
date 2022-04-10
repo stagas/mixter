@@ -86,7 +86,7 @@ export class TodoApp extends mixter(
           display: inline-flex;
           flex-flow: column nowrap;
           align-items: center;
-          font-family: monospace;
+          font-family: 'Ubuntu Mono', monospace;
           background: ${background};
           color: ${todoColor};
           .done {

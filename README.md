@@ -32,7 +32,7 @@ export const App = create(({ $ }) => {
 ```
 
 </p>
-</details></ul></details><details id="example$todo-app" title="todo-app" open><summary><span><a href="#example$todo-app">#</a></span>  <code><strong>todo-app</strong></code></summary>  <ul><p></p>  <a href="https://stagas.github.io/mixter/example/todo-app.html"><img width="308.57142857142856" height="243.42857142857142" src="example/todo-app.png" style="max-width:100%"></img>  <p><strong>Try it live</strong></p></a>    <details id="source$todo-app" title="todo-app source code" ><summary><span><a href="#source$todo-app">#</a></span>  <code><strong>view source</strong></code></summary>  <a href="example/todo-app.tsx">example/todo-app.tsx</a>  <p>
+</details></ul></details><details id="example$todo-app" title="todo-app" open><summary><span><a href="#example$todo-app">#</a></span>  <code><strong>todo-app</strong></code></summary>  <ul><p></p>  <a href="https://stagas.github.io/mixter/example/todo-app.html"><img width="308.57142857142856" src="example/todo-app.png"></img>  <p><strong>Try it live</strong></p></a>    <details id="source$todo-app" title="todo-app source code" ><summary><span><a href="#source$todo-app">#</a></span>  <code><strong>view source</strong></code></summary>  <a href="example/todo-app.tsx">example/todo-app.tsx</a>  <p>
 
 ```tsx
 /** @jsxImportSource mixter/jsx */
@@ -134,7 +134,7 @@ export class TodoApp extends mixter(
           display: inline-flex;
           flex-flow: column nowrap;
           align-items: center;
-          font-family: monospace;
+          font-family: 'Ubuntu Mono', monospace;
           background: ${background};
           color: ${todoColor};
           .done {
