@@ -34,7 +34,7 @@
   </head>
   <body>
     <main></main>
-    <script type="module">const kebab = (s)=>s.replace(/[a-z](?=[A-Z])|[A-Z]+(?=[A-Z][a-z])/g, '<!-- bundle -->-').toLowerCase()
+    <script type="module">const kebab = (s)=>s.replace(/[a-z](?=[A-Z])|[A-Z]+(?=[A-Z][a-z])/g, '$&-').toLowerCase()
 ;
 const toCssText = (style)=>{
     let css = '';
