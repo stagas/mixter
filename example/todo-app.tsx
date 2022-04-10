@@ -31,7 +31,10 @@ export class TodoApp extends mixter(
     class {
       form?: HTMLFormElement
       textInput?: HTMLInputElement
-      todos: Todo[] = [{ name: 'create todo list', done: false }]
+      todos: Todo[] = [
+        { name: 'wow todo list', done: false },
+        { name: 'so much todo', done: false },
+      ]
       onTodoCleanup?: () => void
       onTodoAdd?: () => void
       onTodoChange?: (todo: Todo) => (
