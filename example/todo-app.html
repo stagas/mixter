@@ -41,7 +41,7 @@ const toCssText = (style)=>{
     for(const key in style)css += kebab(key) + ':' + style[key] + ';';
     return css;
 };
-const createProp = (el, _type, name, value, attrs)=>{
+const createProp = (doc = html, el, _type, name, value, attrs)=>{
     switch(name){
         case 'children':
         case 'ref':
@@ -59,7 +59,7 @@ const createProp = (el, _type, name, value, attrs)=>{
     switch(typeof value){
         case 'string':
         case 'number':
-            if (!(name in el)) {
+            if (doc === svg || !(name in el)) {
                 el.setAttribute(attr, value);
                 attrs[attr] = el.getAttributeNode(attr);
                 return;
@@ -76,15 +76,15 @@ const createProp = (el, _type, name, value, attrs)=>{
     if (el.hasAttribute(attr)) attrs[attr] = el.getAttributeNode(attr);
 };
 const propCache = new WeakMap();
-const createProps = (el, type, props = {}, attrs = {}, cacheRef = el)=>{
-    for(const name in props)createProp(el, type, name, props[name], attrs);
+const createProps = (doc, el, type, props = {}, attrs = {}, cacheRef = el)=>{
+    for(const name in props)createProp(doc, el, type, name, props[name], attrs);
     propCache.set(cacheRef, {
         props,
         attrs
     });
 };
-const updateProps = (el, type, next = {}, cacheRef = el)=>{
-    if (!propCache.has(cacheRef)) return next && createProps(el, type, next, void 0, cacheRef);
+const updateProps = (doc, el, type, next = {}, cacheRef = el)=>{
+    if (!propCache.has(cacheRef)) return next && createProps(doc, el, type, next, void 0, cacheRef);
     const c = propCache.get(cacheRef);
     const { attrs , props  } = c;
     if (!next) {
@@ -111,7 +111,15 @@ const updateProps = (el, type, next = {}, cacheRef = el)=>{
         }
         value = value?.valueOf()
         ;
-        el[name] = value;
+        if (props[name] !== value) {
+            if (typeof value === 'function') {
+                const attr = name
+                ;
+                props[attr] = el[attr] = value;
+            } else if (!(name in attrs)) {
+                el[name] = value;
+            }
+        }
     }
     for(const name1 in attrs){
         if (!(name1 in next) || next[name1] === false || next[name1] == null) {
@@ -128,7 +136,7 @@ const updateProps = (el, type, next = {}, cacheRef = el)=>{
         if (props[name1] !== value && typeof value !== 'function') attrs[name1].value = value;
     }
     for(const name2 in next){
-        if (!(name2 in attrs) && !(name2 in props)) createProp(el, type, name2, next[name2], attrs);
+        if (!(name2 in attrs) && !(name2 in props)) createProp(doc, el, type, name2, next[name2], attrs);
     }
     c.props = next;
 };
@@ -160,9 +168,6 @@ let Chunk = class Chunk extends Array {
     get nextSibling() {
         return this.last?.nextSibling;
     }
-    insertBefore(x) {
-        this.unshift(x);
-    }
     appendChild(x) {
         this.push(x);
     }
@@ -180,16 +185,16 @@ let Chunk = class Chunk extends Array {
         this.splice(0);
     }
     removeChild(x) {
-        let i = this.indexOf(x);
+        const i = this.indexOf(x);
         ~i && this.splice(i, 1);
-        i = this.dom.indexOf(x);
-        ~i && this.dom.splice(i, 1);
     }
 };
 const { TEXT_NODE , COMMENT_NODE  } = document;
 const html = document.createElement.bind(document);
 const svg = document.createElementNS.bind(document, 'http://www.w3.org/2000/svg');
-const forceArray = (x, withNull)=>Array.isArray(x) ? x : x == null && !withNull ? [] : [
+const forceArray = (x, withNull)=>Array.isArray(x) ? withNull && !x.length ? [
+        null
+    ] : x : x == null && !withNull ? [] : [
         x
     ]
 ;
@@ -253,11 +258,25 @@ const reconcile = (parent, nk, pk, doc)=>{
     nk.running = false;
 };
 const diff = (parent, n, p, i = 0, len = n.length, el, last)=>{
-    for(; i < len; i++){
-        el = n[i];
-        if (p[i] === el) last = el;
-        else if (!i) parent.insertBefore(last = el, parent.firstChild);
-        else last.after(last = el);
+    if (parent instanceof Chunk) {
+        for(; i < len; i++){
+            el = n[i];
+            if (i < parent.length) {
+                if (p[i] === el) continue;
+                parent[i] = el;
+            } else {
+                parent.push(el);
+            }
+        }
+        let d = parent.length - len;
+        while(d--)parent.pop();
+    } else {
+        for(; i < len; i++){
+            el = n[i];
+            if (p[i] === el) last = el;
+            else if (!i) parent.insertBefore(last = el, parent.firstChild);
+            else last.after(last = el);
+        }
     }
 };
 const create$1 = (doc, n, p, pel)=>{
@@ -279,17 +298,17 @@ const create$1 = (doc, n, p, pel)=>{
                 reconcile(el, n, p, doc);
                 el.save();
             } else if (typeof n.kind === 'string') {
+                if (n.kind === 'svg') doc = svg;
                 if (n.props.ref?.current && n.props.ref.current.tagName.toLowerCase() === n.kind && (el = n.props.ref.current) ||
-                pel && p.kind === n.kind && (el = pel)) {
-                    updateProps(el, n.kind, n.props);
+                pel && p?.kind === n.kind && (el = pel)) {
+                    updateProps(doc, el, n.kind, n.props);
                 } else {
-                    if (n.kind === 'svg') doc = svg;
                     el = doc(n.kind, 'is' in n.props ? {
                         is: n.props.is
                     } : void 0);
-                    if (n.kind === 'foreignObject') doc = html;
-                    createProps(el, n.kind, n.props);
+                    createProps(doc, el, n.kind, n.props);
                 }
+                if (n.kind === 'foreignObject') doc = html;
                 render(n.props.children, el, doc);
                 if ('ref' in n.props && el !== n.props.ref.current) queueMicrotask(()=>n.props.ref.current = el
                 );
@@ -704,8 +723,10 @@ const create = (target) => {
         const result = f.fn(f.values);
         if (f.cb?.(result) === false)
             return;
-        if (f.target != null)
+        if (f.target != null) {
             target[f.target] = result;
+            return true;
+        }
         else {
             if (typeof result === 'function') {
                 f.dispose = () => {
@@ -724,7 +745,9 @@ const create = (target) => {
             if (v === REDUCER) {
                 v = reducer.initial;
                 reducer.target = key;
-                register(reducer);
+                // if value is filled first time then return and don't use initial
+                if (register(reducer))
+                    return;
                 if (v == null)
                     return;
             }
