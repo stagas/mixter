@@ -11,6 +11,13 @@ export type EventMap<T extends Mixin, P extends Record<string, Event>> = {
   >
 }
 
+export type InlineEventMap<T extends Mixin, P extends Record<string, Event>> = {
+  [K in keyof P as `on${K extends string ? K : never}`]: EventHandler<
+    InstanceType<T>,
+    P[K]
+  >
+}
+
 const Listener = (body: string) =>
   new Function(
     'event',
@@ -41,10 +48,5 @@ export const events = <P extends Record<string, Event>>() =>
             addEventListener<K extends keyof P>(type: K, listener: any, options?: any): void
             dispatch(name: string, detail?: any, init?: CustomEventInit): any
           }
-          & {
-            [K in keyof P as `on${K extends string ? K : never}`]: EventHandler<
-              InstanceType<T>,
-              P[K]
-            >
-          }
+          & InlineEventMap<T, P>
         >
