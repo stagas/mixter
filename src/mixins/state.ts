@@ -1,7 +1,6 @@
 import { argtor } from 'argtor'
 import { on } from 'fluent-event'
-import { lifecycle, mixter } from '../'
-import type { Class, Mixin } from '../types'
+import { Class, lifecycle, Mixin, mixter } from '..'
 import { accessors } from '../util'
 
 export type ContextFn<T> = (this: T, ctx: Context<T>) => void
@@ -67,9 +66,10 @@ const create = <T>(target: T) => {
     const result = f.fn(f.values!)
     if (f.cb?.(result) === false) return
 
-    if (f.target != null)
+    if (f.target != null) {
       target[f.target!] = result
-    else {
+      return true
+    } else {
       if (typeof result === 'function') {
         f.dispose = () => {
           result()
@@ -89,7 +89,8 @@ const create = <T>(target: T) => {
       if (v === REDUCER) {
         v = reducer.initial
         reducer.target = key
-        register(reducer)
+        // if value is filled first time then return and don't use initial
+        if (register(reducer)) return
         if (v == null) return
       }
       target[key] = v
