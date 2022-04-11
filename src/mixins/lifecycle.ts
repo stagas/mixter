@@ -1,5 +1,4 @@
-import { events, mixter } from '../'
-import { Class, Mixin } from '../types'
+import { Class, events, Mixin, mixter } from '..'
 
 export const lifecycle = () =>
   <T extends Mixin>(superclass: T) =>
