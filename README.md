@@ -1,5 +1,5 @@
 <h1>
-mixter <a href="https://npmjs.org/package/mixter"><img src="https://img.shields.io/badge/npm-v0.1.0-F00.svg?colorA=000"/></a> <a href="src"><img src="https://img.shields.io/badge/loc-592-FFF.svg?colorA=000"/></a> <a href="https://cdn.jsdelivr.net/npm/mixter@0.1.0/dist/mixter.min.js"><img src="https://img.shields.io/badge/brotli-2.8K-333.svg?colorA=000"/></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F0B.svg?colorA=000"/></a>
+mixter <a href="https://npmjs.org/package/mixter"><img src="https://img.shields.io/badge/npm-v0.2.0-F00.svg?colorA=000"/></a> <a href="src"><img src="https://img.shields.io/badge/loc-593-FFF.svg?colorA=000"/></a> <a href="https://cdn.jsdelivr.net/npm/mixter@0.2.0/dist/mixter.min.js"><img src="https://img.shields.io/badge/brotli-2.8K-333.svg?colorA=000"/></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F0B.svg?colorA=000"/></a>
 </h1>
 
 <p></p>
