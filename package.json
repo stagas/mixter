@@ -148,8 +148,8 @@
   "dependencies": {
     "argtor": "^1.0.1",
     "fluent-event": "^2.0.0",
-    "html-jsx": "^0.3.2",
-    "html-vdom": "^2.0.2",
+    "html-jsx": "^0.3.4",
+    "html-vdom": "^2.1.0",
     "nested-css": "^3.0.5"
   }
 }
