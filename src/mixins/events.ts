@@ -32,9 +32,12 @@ export const events = <P extends Record<string, Event>>() =>
         // based on: https://stackoverflow.com/a/49773201/175416
         dispatchEvent(event: Event) {
           const onEvent = `on${event.type}`
-          let fn = (this as any)[onEvent]
-          if (!fn) fn = Listener(this.getAttribute(onEvent)!)
-          const pass = fn.call(this, event)
+          let pass = true
+          if (!(onEvent in this.constructor.prototype)) {
+            let fn = (this as any)[onEvent]
+            if (!fn) fn = Listener(this.getAttribute(onEvent)!)
+            pass = fn.call(this, event)
+          }
           if (pass !== false) super.dispatchEvent(event)
           return pass
         }
