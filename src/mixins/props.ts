@@ -5,6 +5,18 @@ export const props = <P>(props: Class<P>) =>
     class extends superclass {
       constructor(...args: any[]) {
         super(...args)
-        Object.assign(this, new props())
+        Object.defineProperties(
+          this,
+          Object.fromEntries(
+            Object.entries(new props()).map(([key, value]) => [
+              key,
+              {
+                configurable: true,
+                enumerable: true,
+                value,
+              },
+            ])
+          )
+        )
       }
     } as T & Class<P>
