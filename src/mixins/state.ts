@@ -37,7 +37,14 @@ const create = <T>(target: T) => {
 
   const register = (f: Fx<T, any>) => {
     f.keys = argtor(f.fn) as Set<keyof T>
-    f.keys.forEach(key => effects.get(key)!.push(f))
+    f.keys.forEach(key => {
+      const fx = effects.get(key)
+      if (!fx) {
+        console.warn('No effects for key:', key)
+        return
+      }
+      fx.push(f)
+    })
     !f.keys.size && effects.get(NO_DEPS).push(f)
     f.values = {} as Deps<T>
     return run(f)
