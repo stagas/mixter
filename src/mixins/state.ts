@@ -68,7 +68,10 @@ const create = <T>(target: T) => {
   const run = (f: Fx<T, any>) => {
     update(f)
     f.dispose?.()
-    if (!f.pass) return
+    if (!f.pass) {
+      f.values = {} as Deps<T>
+      return
+    }
 
     const result = f.fn(f.values!)
     if (f.cb?.(result) === false) return

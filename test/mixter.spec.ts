@@ -511,6 +511,37 @@ describe('test', () => {
       expect(count).toBe(1)
     })
 
+    it('apply effect again when same value appears again after dispose', async () => {
+      const results: any = []
+      let count = 0
+      class Foo extends mixter(
+        HTMLElement,
+        props(
+          class {
+            foo: string | null = 'hello'
+          }
+        ),
+        state<Foo>(({ effect }) => {
+          effect(({ foo }) => {
+            results.push(foo)
+            return () => count++
+          })
+        })
+      ) {}
+
+      customElements.define('x-foo' + ++x, Foo)
+      const foo = new Foo()
+      document.body.appendChild(foo)
+
+      expect(results).toEqual(['hello'])
+      expect(count).toBe(0)
+      foo.foo = null
+      expect(count).toBe(1)
+      foo.foo = 'hello'
+      expect(results).toEqual(['hello', 'hello'])
+      expect(count).toBe(1)
+    })
+
     it('reconnect retain local state', async () => {
       const results: any = []
       let count = 0
